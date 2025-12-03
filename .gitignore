@@ -1,0 +1,13 @@
+# Ignore environment variable files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pkl
+
+# Virtual environment
+.venv/
