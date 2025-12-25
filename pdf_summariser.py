@@ -6,7 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 
-def summarize_url(client: OpenAI, url: str, model: str = "gpt-3.5-turbo") -> dict:
+def summarise_url(client: OpenAI, url: str, model: str = "gpt-3.5-turbo") -> dict:
     """Ask the LLM to read and summarize the PDF at the given URL.
 
     This assumes the model has the capability to fetch and read the URL directly.
