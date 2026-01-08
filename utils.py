@@ -272,7 +272,7 @@ def add_content_to_page(notion_token, page_id, content):
         )
 
 
-def write_to_notion(title, url, content, notion_token, database_id):
+async def write_to_notion(title, url, content, notion_token, database_id):
     """
     Write JSON output (Summary, Extended Summary) to a Notion database page.
 
@@ -288,7 +288,7 @@ def write_to_notion(title, url, content, notion_token, database_id):
     notion = Client(auth=notion_token)
 
     # Create a new page in the database
-    new_page = notion.pages.create(
+    new_page = await notion.pages.create(
         parent={"database_id": database_id},
         properties={
             "Title": {
