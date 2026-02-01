@@ -1,5 +1,6 @@
 import re
 from notion_client import Client
+from datetime import date
 
 def extract_title_from_markdown(text):
     """
@@ -21,6 +22,25 @@ def extract_title_from_markdown(text):
 
     return None
 
+def format_result_to_markdown(result_data):
+    """
+    Convert structured result data to markdown format with headings.
+
+    Args:
+        result_data (dict): Dictionary with keys like 'title', 'abstract', 'summary', 'extended_summary'
+
+    Returns:
+        str: Markdown formatted string with headings and content
+    """
+    markdown_output = []
+
+    for key, value in result_data.items():
+        # Convert snake_case to Title Case
+        heading = key.replace('_', ' ').title()
+        markdown_output.append(f"## {heading}\n{value}\n")
+
+    return "".join(markdown_output)
+
 
 def extract_section(text, section_name):
     """
@@ -40,8 +60,8 @@ def extract_section(text, section_name):
     for line in lines:
         stripped = line.strip()
 
-        # Check if we found the section heading
-        if re.match(rf'^#+\s*{re.escape(section_name)}\s*$', stripped, re.IGNORECASE):
+        # Check if we found the section heading (with optional bold formatting)
+        if re.match(rf'^#+\s*(?:\*\*)?{re.escape(section_name)}(?:\*\*)?\s*$', stripped, re.IGNORECASE):
             in_section = True
             continue
 
@@ -272,7 +292,7 @@ def add_content_to_page(notion_token, page_id, content):
         )
 
 
-async def write_to_notion(title, url, content, notion_token, database_id):
+def write_to_notion(title, url, content, model_name, notion_token, database_id, entry_date = None):
     """
     Write JSON output (Summary, Extended Summary) to a Notion database page.
 
@@ -280,15 +300,21 @@ async def write_to_notion(title, url, content, notion_token, database_id):
         title: Document title
         url: Document URL
         content: Content to add to the page (will be chunked if needed)
+        model_name: Name of the model used for summarization
         notion_token: Your Notion API token
         database_id: The ID of your database
+        entry_date: Date of summarization (defaults to today)
     """
 
     # Initialize the Notion client
     notion = Client(auth=notion_token)
 
+    # Set default date to today if not provided
+    if entry_date is None:
+        entry_date = date.today().isoformat()
+
     # Create a new page in the database
-    new_page = await notion.pages.create(
+    new_page = notion.pages.create(
         parent={"database_id": database_id},
         properties={
             "Title": {
@@ -302,6 +328,20 @@ async def write_to_notion(title, url, content, notion_token, database_id):
             },
             "URL": {
                 "url": url
+            },
+            "Model Name": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": model_name
+                        }
+                    }
+                ]
+            },
+            "Date": {
+                "date": {
+                    "start": entry_date
+                }
             }
         }
     )
